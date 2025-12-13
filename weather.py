@@ -15,7 +15,7 @@ url = "https://api.open-meteo.com/v1/forecast"
 params = {
 	"latitude": 52.52,
 	"longitude": 13.41,
-	"hourly": "temperature_2m",
+	"hourly": ["temperature_2m","apparent_temperature"],
 	"current": "temperature_2m",
 	"timezone": "auto",
 }
@@ -38,6 +38,7 @@ print(f"Current temperature_2m: {current_temperature_2m}")
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
 hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+hourly_apparent_temperature = hourly.Variables(1).ValuesAsNumpy()
 
 hourly_data = {"date": pd.date_range(
 	start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
@@ -47,6 +48,8 @@ hourly_data = {"date": pd.date_range(
 )}
 
 hourly_data["temperature_2m"] = hourly_temperature_2m
+hourly_data["apparent_temperature"] = hourly_apparent_temperature
 
 hourly_dataframe = pd.DataFrame(data = hourly_data)
 print("\nHourly data\n", hourly_dataframe)
+
