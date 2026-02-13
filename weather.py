@@ -51,22 +51,34 @@ def output_current_temp(weather_data):
 
 # Process hourly data. The order of variables needs to be the same as requested.
 def output_hourly_temp(weather_data):
-	hourly = weather_data.Hourly()
-	hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-	hourly_apparent_temperature = hourly.Variables(1).ValuesAsNumpy()
+    hourly = weather_data.Hourly()
+    hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+    hourly_apparent_temperature = hourly.Variables(1).ValuesAsNumpy()
 
-	hourly_data = {"date": pd.date_range(
-		start = pd.to_datetime(hourly.Time(), unit = "s", utc = True),
-		end =  pd.to_datetime(hourly.TimeEnd(), unit = "s", utc = True),
-		freq = pd.Timedelta(seconds = hourly.Interval()),
-		inclusive = "left"
-	)}
+    # Get timezone
+    timezone = weather_data.Timezone()
+    if isinstance(timezone, (bytes, bytearray)):
+        timezone = timezone.decode()
 
-	hourly_data["temperature_2m"] = hourly_temperature_2m
-	hourly_data["apparent_temperature"] = hourly_apparent_temperature
+    # Build hourly timestamps in UTC
+    dates_utc = pd.date_range(
+        start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
+        end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
+        freq=pd.Timedelta(seconds=hourly.Interval()),
+        inclusive="left"
+    )
+    dates_local = dates_utc.tz_convert(timezone) #convert UTC dates to local timezone based on user's address
 
-	hourly_dataframe = pd.DataFrame(data = hourly_data)
-	print("\nHourly data\n", hourly_dataframe)
+    hourly_data = {"date": dates_local}
+    hourly_data["temperature_2m"] = hourly_temperature_2m
+    hourly_data["apparent_temperature"] = hourly_apparent_temperature
+
+    hourly_dataframe = pd.DataFrame(data=hourly_data)
+
+    hourly_dataframe["temperature_2m"] = hourly_dataframe["temperature_2m"].round(1)
+    hourly_dataframe["apparent_temperature"] = hourly_dataframe["apparent_temperature"].round(1)
+
+    print("\nHourly data\n", hourly_dataframe.head(12))
 
 def main():
 	user_coordinates = user_input()
