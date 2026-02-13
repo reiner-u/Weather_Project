@@ -1,5 +1,6 @@
 import openmeteo_requests
 import pandas as pd
+import datetime
 import requests_cache
 from geopy.geocoders import Nominatim
 from retry_requests import retry
@@ -36,16 +37,17 @@ def output_location_data(weather_data):
 	response = weather_data
 	print(f"Coordinates: {response.Latitude()}°N {response.Longitude()}°E")
 	print(f"Elevation: {response.Elevation()} m asl")
-	print(f"Timezone: {response.Timezone()}{response.TimezoneAbbreviation()}")
+	print(f"Timezone: {response.Timezone()} {response.TimezoneAbbreviation()}")
 	print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
 
 # Process current data. The order of variables needs to be the same as requested.
 def output_current_temp(weather_data):
 	current = weather_data.Current()
 	current_temperature_2m = current.Variables(0).Value()
-
-	print(f"\nCurrent time: {current.Time()}")
-	print(f"Current temperature_2m: {current_temperature_2m}")
+	
+	#datetime.datetime.fromtimestamp(timestamp)
+	print(f"\nCurrent time: {datetime.datetime.fromtimestamp(current.Time())}")
+	print(f"Current temperature: {current_temperature_2m:.1f}°C")
 
 # Process hourly data. The order of variables needs to be the same as requested.
 def output_hourly_temp(weather_data):
