@@ -60,3 +60,5 @@ hourly_data["apparent_temperature"] = hourly_apparent_temperature
 hourly_dataframe = pd.DataFrame(data = hourly_data)
 print("\nHourly data\n", hourly_dataframe)
 
+def main():
+    
