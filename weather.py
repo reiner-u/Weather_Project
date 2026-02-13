@@ -1,11 +1,7 @@
 import openmeteo_requests
 import pandas as pd
 import requests_cache
-<<<<<<< HEAD
-from geopy.geocoders import Nomatim
-=======
 from geopy.geocoders import Nominatim
->>>>>>> 1b488bb55fc859b18ed6eaa42dbf5483d17842dc
 from retry_requests import retry
 
 # Setup the Open-Meteo API client with cache and retry on error
@@ -13,15 +9,6 @@ cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
 retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
 openmeteo = openmeteo_requests.Client(session = retry_session)
 
-<<<<<<< HEAD
-#Setup Nomatim
-geolocator = Nomatim(user_agent = "Weather App")
-
-#Ask from user the desired location and setup coordinates for use with open-meteo API
-city = input("What city do you live in?")
-location = geolocator.geocode(city)
-
-=======
 #Setup Nomatim
 geolocator = Nominatim(user_agent = "Weather App")
 
@@ -29,7 +16,6 @@ geolocator = Nominatim(user_agent = "Weather App")
 user_location = input("What City or Address do you live in? ")
 location = geolocator.geocode(user_location)
 
->>>>>>> 1b488bb55fc859b18ed6eaa42dbf5483d17842dc
 # Make sure all required weather variables are listed here
 # The order of variables in hourly or daily is important to assign them correctly below
 url = "https://api.open-meteo.com/v1/forecast"
