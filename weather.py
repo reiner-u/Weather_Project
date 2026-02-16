@@ -18,8 +18,7 @@ def user_input():
 	user_location = input("What City or Address do you live in? ")
 	location = geolocator.geocode(user_location)
 	return location
-# Make sure all required weather variables are listed here
-# The order of variables in hourly or daily is important to assign them correctly below
+
 def weather_api(location):
 	url = "https://api.open-meteo.com/v1/forecast"
 	params = {
