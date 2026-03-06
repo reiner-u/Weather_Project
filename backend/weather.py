@@ -1,6 +1,5 @@
 import openmeteo_requests
 import pandas as pd
-import datetime
 import requests_cache
 from geopy.geocoders import Nominatim
 from retry_requests import retry
@@ -11,19 +10,13 @@ retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
 openmeteo = openmeteo_requests.Client(session = retry_session)
 
 #Setup Nomatim
-geolocator = Nominatim(user_agent = "Weather App")
+#geolocator = Nominatim(user_agent = "Weather App")
 
-#Ask from user the desired location and setup coordinates for use with open-meteo API
-def user_input():
-	user_location = input("What City or Address do you live in? ")
-	location = geolocator.geocode(user_location)
-	return location
-
-def weather_api(location):
+def weather_api(lat, lon):
 	url = "https://api.open-meteo.com/v1/forecast"
 	params = {
-		"latitude": location.latitude,
-		"longitude": location.longitude,
+		"latitude": lat,
+		"longitude": lon,
 		"hourly": ["temperature_2m","apparent_temperature"],
 		"current": ["temperature_2m", "apparent_temperature"],
 		"timezone": "auto",
@@ -40,16 +33,19 @@ def output_location_data(weather_data):
 	print(f"Timezone difference to GMT+0: {response.UtcOffsetSeconds()}s")
 
 # Process current data. The order of variables needs to be the same as requested.
-def output_current_temp(weather_data):
+def get_current(weather_data):
 	current = weather_data.Current()
 	current_temperature_2m = current.Variables(0).Value()
-	
-	#datetime.datetime.fromtimestamp(timestamp)
-	print(f"\nCurrent time: {datetime.datetime.fromtimestamp(current.Time())}")
-	print(f"Current temperature: {current_temperature_2m:.1f}°C")
+	current_apparent_temperature = current.Variables(1).Value()
+
+	return {
+		"time": current.Time(),
+		"temperature": round(current_temperature_2m, 1),
+		"apparent": round(current_apparent_temperature, 1),
+	}
 
 # Process hourly data. The order of variables needs to be the same as requested.
-def output_hourly_temp(weather_data):
+def get_hourly(weather_data):
     hourly = weather_data.Hourly()
     hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
     hourly_apparent_temperature = hourly.Variables(1).ValuesAsNumpy()
@@ -74,17 +70,22 @@ def output_hourly_temp(weather_data):
 
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
-    hourly_dataframe["temperature_2m"] = hourly_dataframe["temperature_2m"].round(1)
-    hourly_dataframe["apparent_temperature"] = hourly_dataframe["apparent_temperature"].round(1)
+    hourly_dataframe["temperature_2m"] = hourly_dataframe["temperature_2m"].astype(float).round(1)
+    hourly_dataframe["apparent_temperature"] = hourly_dataframe["apparent_temperature"].astype(float).round(1)
 
-    print("\nHourly data\n", hourly_dataframe.head(12))
+    hourly_dataframe = hourly_dataframe.rename(columns={
+        "temperature_2m": "temperature",
+        "apparent_temperature": "apparent",
+    })
+    hourly_dataframe["date"] = hourly_dataframe["date"].astype(str)
+    return hourly_dataframe.to_dict(orient="records")
 
 def main():
 	user_coordinates = user_input()
 	weather_data = weather_api(user_coordinates)
 	output_location_data(weather_data)
-	output_current_temp(weather_data)
-	output_hourly_temp(weather_data)
+	get_current(weather_data)
+	get_hourly(weather_data)
 	
 if __name__ == "__main__":
 	main()
