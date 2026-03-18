@@ -16,7 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/weather")
+@app.get("/weather") #the usual way to get weather data, through user input
 async def get_weather(city: str):
     geolocator = Nominatim(user_agent="weather_app")
     location = geolocator.geocode(city)
@@ -40,3 +40,23 @@ async def get_weather(city: str):
         hourly=hourly
     )
     return response
+
+@app.get("/coordinates") #alternative way to get weather, skipping geocoding api. Mainly for use with requesting user location which gives coordinates
+async def get_weather_from_coordinates(lat: float, lon: float):
+    weather_data = weather_api(lat, lon)
+    current = get_current(weather_data)
+    hourly = get_hourly(weather_data)
+    
+    timezone = weather_data.Timezone()
+    if isinstance(timezone, (bytes, bytearray)):
+        timezone = timezone.decode()
+
+    response = WeatherResponse(
+        city="Current Location",
+        latitude=lat,
+        longitude=lon,
+        timezone=timezone,
+        current=current,
+        hourly=hourly
+    )
+    return response 
