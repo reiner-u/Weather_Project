@@ -43,6 +43,8 @@ async def get_weather(city: str):
 
 @app.get("/coordinates") #alternative way to get weather, skipping geocoding api. Mainly for use with requesting user location which gives coordinates
 async def get_weather_from_coordinates(lat: float, lon: float):
+    geolocator = Nominatim(user_agent="weather_app")
+    location = geolocator.reverse(f"{lat}, {lon}", zoom=12, language='en') #reverse geocode at level 12, or town/borough level and below. english to ensure address results are in english
     weather_data = weather_api(lat, lon)
     current = get_current(weather_data)
     hourly = get_hourly(weather_data)
@@ -52,7 +54,7 @@ async def get_weather_from_coordinates(lat: float, lon: float):
         timezone = timezone.decode()
 
     response = WeatherResponse(
-        city="Current Location",
+        city=location.raw['address'].get('town') or location.raw['address'].get('city') or "Current Location", #try to get town or city from user location, if not then just say Current Location in the header
         latitude=lat,
         longitude=lon,
         timezone=timezone,
