@@ -50,10 +50,7 @@ function FetchData() {
         const handleError = (err) => {
             setError(err.message);
             console.warn(`ERROR(${err.code}): ${err.message}`);
-            if (err.code === err.PERMISSION_DENIED) {
-            // Guide user to manual settings if denied
-            alert("Location access denied. Please enable it in your browser settings to use this feature.");
-            }
+            setIsLoading(false);
         };
 
         const requestLocation = () => {
@@ -95,12 +92,6 @@ function FetchData() {
     }, [city]); // dependency array includes city, so fetchData will run again when city changes
 
 function renderContent() {
-    if (isLoading) {
-        return <p>Loading...</p>;
-    }
-    if (error) {
-        return <p>Error: {error}</p>;
-    }
     return (
         <div>
             <form onSubmit={handleFormSubmit}>
@@ -111,10 +102,11 @@ function renderContent() {
                 </label>
                 <button type="submit" disabled={isLoading}>Get Weather</button>{/*button is disabled while loading to prevent multiple requests*/}
             </form>
-
-            <h1>{data?.city} Weather</h1> {/* optional chaining to prevent errors if data is null */}
+            {isLoading && <p>Loading...</p>}
+            {error && <p>Error: {error}</p>}
             {data && (
                 <div>
+                    <h1>{data?.city} Weather</h1>
                     {/*display weather data here, like specific items from fastAPI json object*/}
                     <p>Current Time: {new Date((data.current.time)*1000).toLocaleString()}</p>
                     <p>Current Temperature: {data.current.temperature}°C</p>
