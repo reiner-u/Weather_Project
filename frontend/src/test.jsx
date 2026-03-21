@@ -91,7 +91,6 @@ function FetchData() {
         fetchData();
     }, [city]); // dependency array includes city, so fetchData will run again when city changes
 
-function renderContent() {
     return (
         <div>
             <form onSubmit={handleFormSubmit}>
@@ -116,12 +115,6 @@ function renderContent() {
                 </div>
             )}
         </div>
-    );
-}
-return (
-    <div>
-        {renderContent()}
-    </div>
-)
+    )
 }
 export default FetchData;
