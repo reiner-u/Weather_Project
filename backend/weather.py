@@ -98,6 +98,9 @@ def get_hourly(weather_data):
 
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
+    now_local = pd.Timestamp.now(tz=timezone)
+    hourly_dataframe = hourly_dataframe[hourly_dataframe["date"] >= now_local].head(24).reset_index(drop=True) #filter out past hours and limit sent data to 24 hours. Previously would return data from 12AM of the current day and all 168 hours, or 7 days worth of data.
+
     for col in ["temperature", "apparent", "wind_speed", "wind_gusts", "wind_direction", "precipitation"]:
         hourly_dataframe[col] = hourly_dataframe[col].astype(float).round(1)
     hourly_dataframe["precip_probability"] = hourly_dataframe["precip_probability"].astype(float).round(0).astype(int)

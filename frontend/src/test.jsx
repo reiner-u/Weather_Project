@@ -110,9 +110,19 @@ function FetchData() {
                     <p>Current Time: {new Date((data.current.time)*1000).toLocaleString()}</p>
                     <p>Current Temperature: {data.current.temperature}°C</p>
                     <p>Currently Feels Like: {data.current.apparent}</p>
+
+                    {data.hourly.map(entry => (
+                        <div key={entry.time}>
+                            <p>Time: {new Date(entry.date).toLocaleString()}</p>
+                            <p>Temperature: {entry.temperature}°C</p>
+                            <p>Feels Like: {entry.apparent}</p>
+                        </div>
+                    ))}
+
                     {/*for debugging. display entire json object*/}
                     <pre>{JSON.stringify(data, null, 2)}</pre>
                 </div>
+                
             )}
         </div>
     )
