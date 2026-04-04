@@ -1,127 +1,131 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect } from "react";
+import { useState } from "react";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [data, setData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [city, setCity] = useState(""); // hardcoded city for testing, setCity for future user input
+    const [userInput, setUserInput] = useState("");
+    const [location, setLocation] = useState(null);
+    const handleCityChange = (event) => {
+        setUserInput(event.target.value);
+    };
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    const handleFormSubmit = (event) => {
+        event.preventDefault();
+        setIsLoading(true);
+        setError(null);
+        setCity(userInput) //had issues with requests overloading due to useEffect running on every keystroke, so I moved setCity here to only update city when form is submitted, which will trigger useEffect to run fetchData again with new city
+        //fetchData will be called in useEffect, which will run again when city state changes
+    }
+
+    useEffect(() => {
+        const handleSuccess = (position) => {
+            setLocation({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+            setError(null);
+            const fetchData = async () => {
+            try {
+                const response = await fetch(`http://localhost:8000/coordinates?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                setData(result);
+                setError(null);
+            } catch (error) {
+                setError(error.message);
+                setData(null);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+        };
+
+        const handleError = (err) => {
+            setError(err.message);
+            console.warn(`ERROR(${err.code}): ${err.message}`);
+            setIsLoading(false);
+        };
+
+        const requestLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    handleSuccess,
+                    handleError,
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                );
+            }
+            else
+            {
+                    setError("Geolocation is not supported by your browser.");
+            }
+        };
+        requestLocation();
+    }, []); // empty dependency array means this will run once on component mount when page loads to request location
+
+    useEffect(() =>
+    {
+        const fetchData = async () => {
+            try {
+                if (!city) return; // if city is empty, don't make the request. Prevents override of location when user's location is fetched upon page load
+                const response = await fetch(`http://localhost:8000/weather?city=${city}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                setData(result);
+                setError(null);
+            } catch (error) {
+                setError(error.message);
+                setData(null);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [city]); // dependency array includes city, so fetchData will run again when city changes
+
+    return (
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-        <button
-          className="show_weather"
-          onClick={() => setCount((count) => count - 1)}
-        >
-          Show Weather
-        </button>
-      </section>
+            <form onSubmit={handleFormSubmit}>
+                <label>
+                    Enter City to view weather data:
+                    <input type="text" value={userInput} onChange={handleCityChange}
+                    placeholder="Enter city name"/>
+                </label>
+                <button type="submit" disabled={isLoading}>Get Weather</button>{/*button is disabled while loading to prevent multiple requests*/}
+            </form>
+            {isLoading && <p>Loading...</p>}
+            {error && <p>Error: {error}</p>}
+            {data && (
+                <div className="weather-container">
+                    <h1 className="location-weather">{data?.city} Weather</h1>
+                    {/*display weather data here, like specific items from fastAPI json object*/}
+                    <p className="current-time">Current Time: {new Date((data.current.time)*1000).toLocaleString()}</p>
+                    <p className="current-temperature">Current Temperature: {data.current.temperature}°C</p>
+                    <p className="current-feels-like">Currently Feels Like: {data.current.apparent}°C</p>
+                    <div className="hourly-table">
+                        {data.hourly.map(entry => (
+                            <div key={entry.date} className="hourly-entry">
+                                <p className="hourly-time">Time: {new Date(entry.date).toLocaleString()}</p>
+                                <p className="hourly-temperature">Temperature: {entry.temperature}°C</p>
+                                <p className="hourly-feels-like">Feels Like: {entry.apparent}°C</p>
+                            </div>
+                        ))}
+                    </div>
 
-      <div className="ticks"></div>
+                    {/*for debugging. display entire json object*/}
+                    {/*<pre>{JSON.stringify(data, null, 2)}</pre>*/}
+                </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+            )}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    )
 }
-
-export default App
+export default App;
