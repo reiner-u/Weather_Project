@@ -53,11 +53,23 @@ frontend/
 
 ## Running it
 
-```bash
-# Backend (from /backend with venv active):
-uvicorn main:app --reload
+Both processes need to run simultaneously in separate terminals.
 
-# Frontend (from /frontend):
+**Backend** (from the `/backend` directory):
+
+```bash
+# First-time setup — install dependencies:
+pip install -r requirements.txt
+
+# Activate the virtual environment, then start the server:
+source ~/venv/bin/activate
+uvicorn main:app --reload
+```
+
+**Frontend** (from the `/frontend` directory — use a second terminal, e.g. the integrated one in VSCode):
+
+```bash
+npm install   # first-time setup — installs React, Vite, and all JS dependencies
 npm run dev
 ```
 
