@@ -1,6 +1,19 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import "./App.css";
+import { getWeatherIcon } from "./weatherIcons";
+
+function WeatherIcon({ code, className }) {
+    const { markup, label } = getWeatherIcon(code);
+    return (
+        <span
+            className={className}
+            role="img"
+            aria-label={label}
+            dangerouslySetInnerHTML={{ __html: markup }}
+        />
+    );
+}
 
 function App() {
     const [data, setData] = useState(null);
@@ -92,8 +105,8 @@ function App() {
     }, [city]); // dependency array includes city, so fetchData will run again when city changes
 
     return (
-        <div>
-            <form onSubmit={handleFormSubmit}>
+        <div className="app-shell">
+            <form className="search-form" onSubmit={handleFormSubmit}>
                 <label>
                     Enter City to view weather data:
                     <input type="text" value={userInput} onChange={handleCityChange}
@@ -107,12 +120,18 @@ function App() {
                 <div className="weather-container">
                     <h1 className="location-weather">{data?.city} Weather</h1>
                     {/*display weather data here, like specific items from fastAPI json object*/}
-                    <p className="current-time">Current Time: {new Date((data.current.time)*1000).toLocaleString()}</p>
-                    <p className="current-temperature">Current Temperature: {data.current.temperature}°C</p>
-                    <p className="current-feels-like">Currently Feels Like: {data.current.apparent}°C</p>
+                    <div className="current-hero">
+                        <WeatherIcon code={data.current.weather_code} className="current-icon" />
+                        <div className="current-details">
+                            <p className="current-time">Current Time: {new Date((data.current.time)*1000).toLocaleString()}</p>
+                            <p className="current-temperature">Current Temperature: {data.current.temperature}°C</p>
+                            <p className="current-feels-like">Currently Feels Like: {data.current.apparent}°C</p>
+                        </div>
+                    </div>
                     <div className="hourly-table">
                         {data.hourly.map(entry => (
                             <div key={entry.date} className="hourly-entry">
+                                <WeatherIcon code={entry.weather_code} className="hourly-icon" />
                                 <p className="hourly-time">Time: {new Date(entry.date).toLocaleString()}</p>
                                 <p className="hourly-temperature">Temperature: {entry.temperature}°C</p>
                                 <p className="hourly-feels-like">Feels Like: {entry.apparent}°C</p>
