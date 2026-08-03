@@ -66,7 +66,7 @@ function App() {
             setError(null);
             const fetchData = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/coordinates?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+                const response = await fetch(`https://weather-project-ct3v.onrender.com/coordinates?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -110,7 +110,7 @@ function App() {
         const fetchData = async () => {
             try {
                 if (!city) return; // if city is empty, don't make the request. Prevents override of location when user's location is fetched upon page load
-                const response = await fetch(`http://localhost:8000/weather?city=${city}`);
+                const response = await fetch(`https://weather-project-ct3v.onrender.com/weather?city=${city}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
