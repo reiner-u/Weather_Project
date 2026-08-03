@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import "./App.css";
 import { getWeatherIcon } from "./weatherIcons";
+import PrecipitationChart from "./PrecipitationChart";
 
 function WeatherIcon({ code, className }) {
     const { markup, label } = getWeatherIcon(code);
@@ -12,6 +13,28 @@ function WeatherIcon({ code, className }) {
             aria-label={label}
             dangerouslySetInnerHTML={{ __html: markup }}
         />
+    );
+}
+
+function WindIndicator({ speed, gusts, direction }) {
+    // Open-Meteo's wind_direction is the compass bearing the wind is blowing
+    // FROM. Adding 180 flips a north-pointing arrow so it visually points
+    // toward where the wind is actually heading, which reads more naturally.
+    const rotation = direction + 180;
+    return (
+        <span
+            className="wind-indicator"
+            role="img"
+            aria-label={`Wind ${speed} km/h, gusts up to ${gusts} km/h`}
+            title={`Gusts up to ${gusts} km/h`}
+        >
+            <span className="wind-arrow" style={{ transform: `rotate(${rotation}deg)` }}>
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2 L18 20 L12 16 L6 20 Z" />
+                </svg>
+            </span>
+            {speed} km/h
+        </span>
     );
 }
 
@@ -128,6 +151,11 @@ function App() {
                             <p className="current-feels-like">Currently Feels Like: {data.current.apparent}°C</p>
                         </div>
                     </div>
+
+                    <h2 className="section-title">Precipitation</h2>
+                    <PrecipitationChart hourly={data.hourly} />
+
+                    <h2 className="section-title">Hourly Forecast</h2>
                     <div className="hourly-table">
                         {data.hourly.map(entry => (
                             <div key={entry.date} className="hourly-entry">
@@ -135,6 +163,11 @@ function App() {
                                 <p className="hourly-time">Time: {new Date(entry.date).toLocaleString()}</p>
                                 <p className="hourly-temperature">Temperature: {entry.temperature}°C</p>
                                 <p className="hourly-feels-like">Feels Like: {entry.apparent}°C</p>
+                                <WindIndicator
+                                    speed={entry.wind_speed}
+                                    gusts={entry.wind_gusts}
+                                    direction={entry.wind_direction}
+                                />
                             </div>
                         ))}
                     </div>

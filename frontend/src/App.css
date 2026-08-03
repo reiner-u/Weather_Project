@@ -25,14 +25,15 @@
 }
 
 .current-hero {
-    display: flex;
+    display: grid;
+    grid-template-columns: 88px 1fr 88px;
     align-items: center;
-    justify-content: center;
     gap: 24px;
     margin: 8px 0 20px;
 }
 
 .current-details {
+    grid-column: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -58,6 +59,7 @@
 }
 
 .current-icon {
+    grid-column: 1;
     width: 88px;
     height: 88px;
     color: var(--accent);
@@ -126,6 +128,78 @@
 .hourly-feels-like {
     font-size: 0.85rem;
     color: var(--text);
+}
+
+.wind-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text);
+}
+
+.wind-arrow {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.wind-arrow svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.wind-arrow svg path {
+    fill: currentColor;
+}
+
+.section-title {
+    margin-top: 24px;
+}
+
+.precip-chart {
+    width: 100%;
+    max-width: 900px;
+    height: 140px;
+    margin: 0 auto 8px;
+    display: block;
+}
+
+.precip-baseline {
+    stroke: var(--border);
+    stroke-width: 1;
+}
+
+.precip-gridline {
+    stroke: var(--border);
+    stroke-width: 1;
+    stroke-opacity: 0.5;
+}
+
+.precip-axis-label {
+    font-size: 10px;
+    fill: var(--text);
+    opacity: 0.7;
+}
+
+.precip-bar {
+    fill: var(--accent-cyan);
+    fill-opacity: 0.7;
+    transition: fill-opacity 0.15s ease;
+}
+
+.precip-bar:hover {
+    fill-opacity: 0.85;
+}
+
+.precip-label {
+    font-size: 11px;
+    fill: var(--text);
+    opacity: 0.7;
 }
 
 .app-shell {
