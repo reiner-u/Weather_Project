@@ -4,6 +4,8 @@ A full-stack weather app built to learn what it actually takes to connect a fron
 
 It detects your location on load and fetches live weather data immediately. You can also search any city by name. Either way, you get current conditions and a 24-hour hourly forecast pulled from the Open-Meteo API, no API key required.
 
+**Live:** [reinerumila-weatherproject.netlify.app](https://reinerumila-weatherproject.netlify.app) · backend deployed on Render
+
 ---
 
 ## How it works
@@ -26,7 +28,13 @@ There are two `useEffect` hooks. The first runs once on mount with an empty depe
 
 Loading and error states render conditionally inline using `&&` operators, which is the idiomatic React pattern for conditional rendering. The 24-hour hourly forecast is rendered by mapping over `data.hourly`, using `entry.date` as the `key` prop since each timestamp in the window is unique.
 
-Styling is split between `index.css` for global tokens and layout and `App.css` for component-level styles. The global stylesheet defines a full set of CSS custom properties at `:root` for colours, typography, and shadows, with a `prefers-color-scheme: dark` block that swaps the palette automatically based on the user's system preference. Layout is handled with flexbox throughout: the hourly forecast list uses a column-direction flex container, and each hourly card is a centered flex column with controlled width and gap. Understanding what `index.css` actually is and how it relates to component stylesheets, and getting flexbox to behave, were both things that had to be figured out here.
+Styling is split between `index.css` for global tokens and layout and `App.css` for component-level styles. The global stylesheet defines a full set of CSS custom properties at `:root` for colours, typography, and shadows, with a `prefers-color-scheme: dark` block that swaps the palette automatically based on the user's system preference. The dark palette matches the Night Owl theme used on my portfolio site, sharing exact colour values (`#011627` background, `#d6deeb` foreground, `#c792ea` accent) so this project's screenshot sits naturally alongside the rest of the site. Layout mixes flexbox and CSS Grid depending on what each piece needs: the hourly forecast is a horizontally snap-scrolling flex row (with a `mask-image` edge fade and themed scrollbar), while the current-conditions hero uses a symmetric three-column grid (`icon | text | invisible spacer matching the icon's width`) so the text stays centered on the page regardless of the icon's footprint. A flex row centering "icon + text" as one unit doesn't achieve that on its own.
+
+Weather condition icons come from the `weather-icons-master` SVG set, mapped from Open-Meteo's WMO weather codes in `weatherIcons.js`. Vite's `import.meta.glob` eagerly loads the relevant SVGs as raw markup at build time, keyed by filename, so there's no need for a static import line per icon. The icons themselves ship with no `fill` attribute (defaulting to black), so they're injected as inline markup via `dangerouslySetInnerHTML` rather than referenced with an `<img src>` tag: an `<img>` can't be recoloured by page CSS, but injected SVG elements can, via `fill: currentColor` on the `<path>` targeted from `App.css`. That's what lets the icons follow the theme's accent colour instead of rendering as flat black shapes.
+
+Wind direction is drawn as a small arrow rotated with a CSS `transform`, using each hour's `wind_direction` value directly. Since Open-Meteo reports the compass bearing wind is blowing *from*, the rotation adds 180° so the arrow visually points toward where the wind is actually heading. Precipitation probability is charted in `PrecipitationChart.jsx` as a hand-rolled SVG bar chart with a labelled 0–100% value axis, rather than pulling in a charting library. With ~24 data points and one metric, mapping probability linearly into pixel height is simple enough to not need one.
+
+Understanding what `index.css` actually is and how it relates to component stylesheets, getting flexbox to behave, and later working out the CSS Grid centering trick, were all things that had to be figured out here.
 
 ---
 
@@ -41,9 +49,13 @@ backend/
 
 frontend/
   src/
-    App.jsx         : Main component: weather fetch logic, state management, render
-    App.css         : Component styles
-    index.css       : Global styles
+    App.jsx                : Main component: weather fetch logic, state management, render
+    App.css                : Component styles
+    index.css               : Global styles, CSS custom properties, dark mode
+    weatherIcons.js         : WMO weather code -> icon filename mapping
+    PrecipitationChart.jsx  : Hand-rolled SVG bar chart for hourly precip probability
+    assets/
+      weather_icons/        : weather-icons-master SVG set
   index.html
   vite.config.js
   package.json
@@ -58,7 +70,7 @@ Both processes need to run simultaneously in separate terminals.
 **Backend** (from the `/backend` directory):
 
 ```bash
-# First-time setup — install dependencies:
+# First-time setup: install dependencies
 pip install -r requirements.txt
 
 # Activate the virtual environment, then start the server:
@@ -66,10 +78,10 @@ source ~/venv/bin/activate
 uvicorn main:app --reload
 ```
 
-**Frontend** (from the `/frontend` directory — use a second terminal, e.g. the integrated one in VSCode):
+**Frontend** (from the `/frontend` directory; use a second terminal, e.g. the integrated one in VSCode):
 
 ```bash
-npm install   # first-time setup — installs React, Vite, and all JS dependencies
+npm install   # first-time setup: installs React, Vite, and all JS dependencies
 npm run dev
 ```
 
@@ -87,8 +99,10 @@ React was entirely new territory. The component lifecycle, the rules around hook
 
 Working with real API data also introduced problems that do not exist in toy examples: timezone conversion, filtering stale rows from a DataFrame, graceful handling of geocoding failures, and making sure the frontend does not fire redundant requests. Each one was its own small problem to sit with and solve.
 
+Coming back to this months later for a frontend pass taught a different kind of lesson than the initial build did. It's less about learning a new framework, or even knowing how to read older code I've written but since forgot, and more about the payoff of decisions made earlier. Every piece of data used in this refresh (weather codes, wind, precipitation) was already sitting in the backend response from the original build, so the entire session was frontend-only with zero backend changes. That made a strong case for designing an API response around what the data *could* support, not just what the UI happened to render on day one. On the frontend side specifically: Vite's `import.meta.glob` for pulling in a whole folder of assets without a manual import per file, `currentColor` as the trick that makes SVG icons theme-able at all, and the realization that a hand-rolled SVG chart with about ~20 lines of coordinate math is often less work, and easier to explain, than reaching for a charting library/framework I then need to cover when asked during an interview.
+
 ---
 
 ## What's next
 
-SVG weather icons mapped from WMO weather codes using the weather-icons library. A wind direction compass. Data graphs plotting hourly changes in temperature, humidity, etc. Further stylistic additions like ambient gradient backgrounds based on local time of day, and much more. Finally, deployment to Netlify (frontend) and Render (backend) as part of my portfolio site.
+Day/night icon variants, switching based on Open-Meteo sunrise/sunset times; the mapping in `weatherIcons.js` already has night-variant filenames ready to go, but the backend doesn't fetch sunrise/sunset yet, so that's the next real backend change (the first since this project's frontend refresh). Beyond that: additional hourly graphs (temperature, wind speed), ambient gradient backgrounds based on local time of day, and Dockerizing the backend as a deployment and portfolio talking point.
