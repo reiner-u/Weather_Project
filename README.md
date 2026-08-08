@@ -6,6 +6,8 @@ It detects your location on load and fetches live weather data immediately. You 
 
 **Live:** [reinerumila-weatherproject.netlify.app](https://reinerumila-weatherproject.netlify.app) · backend deployed on Render
 
+![Weather app screenshot](docs/screenshot.png)
+
 ---
 
 ## How it works
