@@ -6,3 +6,4 @@ retry-requests
 geopy
 pandas
 numpy
+requests
